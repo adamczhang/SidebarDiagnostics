@@ -55,6 +55,7 @@ namespace SidebarDiagnostics.Models
             AutoBGColor = Framework.Settings.Instance.AutoBGColor;
             BGColor = Framework.Settings.Instance.BGColor;
             BGOpacity = Framework.Settings.Instance.BGOpacity;
+            FitBackgroundToContent = Framework.Settings.Instance.FitBackgroundToContent;
 
             TextAlignItems = new TextAlignItem[2]
             {
@@ -151,6 +152,7 @@ namespace SidebarDiagnostics.Models
             Framework.Settings.Instance.AutoBGColor = AutoBGColor;
             Framework.Settings.Instance.BGColor = BGColor;
             Framework.Settings.Instance.BGOpacity = BGOpacity;
+            Framework.Settings.Instance.FitBackgroundToContent = FitBackgroundToContent;
             Framework.Settings.Instance.TextAlign = TextAlign;
             Framework.Settings.Instance.FontSetting = FontSetting;
             Framework.Settings.Instance.FontColor = FontColor;
@@ -621,6 +623,22 @@ namespace SidebarDiagnostics.Models
                 _bgOpacity = value;
 
                 NotifyPropertyChanged("BGOpacity");
+            }
+        }
+
+        private bool _fitBackgroundToContent { get; set; }
+
+        public bool FitBackgroundToContent
+        {
+            get
+            {
+                return _fitBackgroundToContent;
+            }
+            set
+            {
+                _fitBackgroundToContent = value;
+
+                NotifyPropertyChanged("FitBackgroundToContent");
             }
         }
 

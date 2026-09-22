@@ -431,6 +431,23 @@ namespace SidebarDiagnostics.Framework
             }
         }
 
+        private bool _fitBackgroundToContent { get; set; } = false;
+
+        [JsonProperty]
+        public bool FitBackgroundToContent
+        {
+            get
+            {
+                return _fitBackgroundToContent;
+            }
+            set
+            {
+                _fitBackgroundToContent = value;
+
+                NotifyPropertyChanged("FitBackgroundToContent");
+            }
+        }
+
         private TextAlign _textAlign { get; set; } = TextAlign.Left;
 
         [JsonProperty]

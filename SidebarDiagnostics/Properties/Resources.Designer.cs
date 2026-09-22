@@ -1069,6 +1069,24 @@ namespace SidebarDiagnostics.Framework {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fit Background to Content.
+        /// </summary>
+        public static string SettingsFitBackgroundToContent {
+            get {
+                return ResourceManager.GetString("SettingsFitBackgroundToContent", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string describing content-sized background behavior.
+        /// </summary>
+        public static string SettingsFitBackgroundToContentTooltip {
+            get {
+                return ResourceManager.GetString("SettingsFitBackgroundToContentTooltip", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Background Opacity.
         /// </summary>
         public static string SettingsBackgroundOpacity {

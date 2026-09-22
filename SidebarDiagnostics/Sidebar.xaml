@@ -16,7 +16,7 @@
         MouseEnter="Window_MouseEnter"
         MouseLeave="Window_MouseLeave"
         Style="{StaticResource SidebarWindow}">
-    <Grid>
+    <Grid Style="{StaticResource SidebarBackground}">
         <Ellipse IsEnabled="{Binding Path=Ready, Mode=OneWay, Converter={StaticResource BoolInverseConverter}}">
             <Ellipse.RenderTransform>
                 <RotateTransform CenterX="20" CenterY="20" />

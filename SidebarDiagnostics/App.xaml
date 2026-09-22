@@ -63,12 +63,21 @@
                 <Setter Property="ShowMaximize" Value="False" />
                 <Setter Property="ShowClose" Value="False" />
                 <Setter Property="WindowStyle" Value="None" />
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+
+            <!-- Keep AppBar sizing independent from the painted background height. -->
+            <Style x:Key="SidebarBackground" TargetType="{x:Type Grid}">
+                <Setter Property="VerticalAlignment" Value="Stretch" />
                 <Setter Property="Background">
                     <Setter.Value>
                         <SolidColorBrush Opacity="{Binding Source={x:Static frame:Settings.Instance}, Path=BGOpacity, Mode=OneWay}" Color="{Binding Source={x:Static frame:Settings.Instance}, Path=BGColor, Mode=OneWay}" />
                     </Setter.Value>
                 </Setter>
                 <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=FitBackgroundToContent, Mode=OneWay}" Value="True">
+                        <Setter Property="VerticalAlignment" Value="Top" />
+                    </DataTrigger>
                     <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=AutoBGColor, Mode=OneWay}" Value="True">
                         <Setter Property="Background">
                             <Setter.Value>

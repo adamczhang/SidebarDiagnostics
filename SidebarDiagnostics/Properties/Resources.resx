@@ -1040,4 +1040,10 @@
     <value>Shows the name of the computer.</value>
     <comment>Settings show machine name tooltip</comment>
   </data>
+  <data name="SettingsFitBackgroundToContent" xml:space="preserve">
+    <value>Fit Background to Content</value>
+  </data>
+  <data name="SettingsFitBackgroundToContentTooltip" xml:space="preserve">
+    <value>Size the background to the visible content. Does not change reserved desktop space.</value>
+  </data>
 </root>
