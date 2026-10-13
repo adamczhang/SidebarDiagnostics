@@ -16,7 +16,7 @@
         MouseEnter="Window_MouseEnter"
         MouseLeave="Window_MouseLeave"
         Style="{StaticResource SidebarWindow}">
-    <Grid>
+    <Grid Style="{StaticResource SidebarBackground}">
         <Ellipse IsEnabled="{Binding Path=Ready, Mode=OneWay, Converter={StaticResource BoolInverseConverter}}">
             <Ellipse.RenderTransform>
                 <RotateTransform CenterX="20" CenterY="20" />
@@ -128,15 +128,31 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type monitor:MonitorPanel}">
                                 <StackPanel Style="{StaticResource GroupPanel}">
-                                    <StackPanel Style="{StaticResource MonitorTitle}">
+                                    <StackPanel Style="{StaticResource VerticalOnlyTitle}">
                                         <Path Data="{Binding Path=IconPath, Mode=OneWay}" Style="{StaticResource AppIcon}" />
-                                        <Label Content="{Binding Path=Title, Mode=OneWay}" Style="{StaticResource AppTitle}" />
+                                        <Label Content="{Binding Path=Title, Mode=OneWay}" Style="{StaticResource HeadingTitle}" />
                                     </StackPanel>
                                     
                                     <ItemsControl ItemsSource="{Binding Path=Monitors, Mode=OneWay}">
                                         <ItemsControl.Resources>
                                             <DataTemplate DataType="{x:Type monitor:BaseMonitor}">
-                                                <StackPanel Style="{StaticResource MonitorPanel}">
+                                                <StackPanel local:StackAlertPulse.Enabled="True">
+                                                    <StackPanel Style="{StaticResource HorizontalColumnTitle}">
+                                                        <Path Data="{Binding HorizontalIcon}">
+                                                            <Path.Style>
+                                                                <Style TargetType="{x:Type Path}" BasedOn="{StaticResource AppIcon}">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding HasAlert}" Value="True">
+                                                                            <Setter Property="Fill" Value="{Binding Source={x:Static frame:Settings.Instance}, Path=AlertFontColor}" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding HorizontalIcon}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                        <Label Content="{Binding HorizontalHeading}" Style="{StaticResource HeadingTitle}" />
+                                                    </StackPanel>
+                                                    <StackPanel Style="{StaticResource MonitorPanel}">
                                                     <ContentControl>
                                                         <ContentControl.Style>
                                                             <Style TargetType="{x:Type ContentControl}">
@@ -147,6 +163,9 @@
                                                                                 <TextBlock Text="{Binding Path=Name, Mode=OneWay}" Style="{StaticResource HardwareText}" />
                                                                             </Setter.Value>
                                                                         </Setter>
+                                                                    </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Collapsed" />
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
@@ -164,21 +183,38 @@
                                                         </ItemsControl.ItemTemplate>
                                                         <ItemsControl.ItemsPanel>
                                                             <ItemsPanelTemplate>
-                                                                <StackPanel Style="{StaticResource VerticalPanel}" />
+                                                                <UniformGrid Style="{StaticResource MetricRows}" />
                                                             </ItemsPanelTemplate>
                                                         </ItemsControl.ItemsPanel>
                                                     </ItemsControl>
                                                 </StackPanel>
+                                                </StackPanel>
                                             </DataTemplate>
 
                                             <DataTemplate DataType="{x:Type monitor:DriveMonitor}">
-                                                <StackPanel Style="{StaticResource MonitorPanel}">
+                                                <StackPanel local:StackAlertPulse.Enabled="True">
+                                                    <StackPanel Style="{StaticResource HorizontalColumnTitle}">
+                                                        <Path Data="{Binding HorizontalIcon}">
+                                                            <Path.Style>
+                                                                <Style TargetType="{x:Type Path}" BasedOn="{StaticResource AppIcon}">
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding HasAlert}" Value="True">
+                                                                            <Setter Property="Fill" Value="{Binding Source={x:Static frame:Settings.Instance}, Path=AlertFontColor}" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding HorizontalIcon}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Path.Style>
+                                                        </Path>
+                                                        <Label Content="{Binding HorizontalHeading}" Style="{StaticResource HeadingTitle}" />
+                                                    </StackPanel>
+                                                    <StackPanel Style="{StaticResource MonitorPanel}">
                                                     <ContentControl>
                                                         <ContentControl.Style>
                                                             <Style TargetType="{x:Type ContentControl}">
                                                                 <Setter Property="Content">
                                                                     <Setter.Value>
-                                                                        <TextBlock Text="{Binding Path=Name, Mode=OneWay}" Style="{StaticResource DataText}" />
+                                                                        <TextBlock Text="{Binding Path=Name, Mode=OneWay}" Style="{StaticResource DriveRowName}" />
                                                                     </Setter.Value>
                                                                 </Setter>
                                                                 <Style.Triggers>
@@ -186,7 +222,7 @@
                                                                         <Setter Property="Content">
                                                                             <Setter.Value>
                                                                                 <StackPanel Style="{StaticResource VerticalPanel}">
-                                                                                    <TextBlock Text="{Binding Path=Name, Mode=OneWay}" Style="{StaticResource DataText}" />
+                                                                                    <TextBlock Text="{Binding Path=Name, Mode=OneWay}" Style="{StaticResource DriveRowName}" />
                                                                                     <ProgressBar DataContext="{Binding Path=LoadMetric}" Value="{Binding Path=Value, Mode=OneWay}" Style="{StaticResource DriveProgress}" />
                                                                                 </StackPanel>
                                                                             </Setter.Value>
@@ -197,12 +233,13 @@
                                                                         <Setter Property="Content">
                                                                             <Setter.Value>
                                                                                 <StackPanel Orientation="Horizontal">
-                                                                                    <TextBlock Text="{Binding Path=Name, Mode=OneWay}" Width="{Binding Source={x:Static frame:Settings.Instance}, Path=FontSetting.FontSize, Mode=OneWay}" Style="{StaticResource DataText}" />
+                                                                                    <TextBlock Text="{Binding Path=Name, Mode=OneWay}" Width="{Binding Source={x:Static frame:Settings.Instance}, Path=FontSetting.FontSize, Mode=OneWay}" Style="{StaticResource DriveRowName}" />
                                                                                     <ProgressBar DataContext="{Binding Path=LoadMetric}" Value="{Binding Path=Value, Mode=OneWay}" Margin="8,2,0,0" Width="{Binding Source={x:Static frame:Settings.Instance}, Path=FontSetting.BarWidth, Mode=OneWay}" Style="{StaticResource DriveProgress}" />
                                                                                 </StackPanel>
                                                                             </Setter.Value>
                                                                         </Setter>
                                                                     </DataTrigger>
+
                                                                 </Style.Triggers>
                                                             </Style>
                                                         </ContentControl.Style>
@@ -219,16 +256,17 @@
                                                         </ItemsControl.ItemTemplate>
                                                         <ItemsControl.ItemsPanel>
                                                             <ItemsPanelTemplate>
-                                                                <StackPanel Style="{StaticResource VerticalPanel}" />
+                                                                <UniformGrid Style="{StaticResource MetricRows}" />
                                                             </ItemsPanelTemplate>
                                                         </ItemsControl.ItemsPanel>
                                                     </ItemsControl>
+                                                </StackPanel>
                                                 </StackPanel>
                                             </DataTemplate>
                                         </ItemsControl.Resources>
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <StackPanel Style="{StaticResource VerticalPanel}" />
+                                                <StackPanel Style="{StaticResource OrientationPanel}" />
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                     </ItemsControl>
@@ -237,7 +275,7 @@
                         </ItemsControl.ItemTemplate>
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Style="{StaticResource VerticalPanel}" />
+                                <StackPanel Style="{StaticResource OrientationPanel}" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>

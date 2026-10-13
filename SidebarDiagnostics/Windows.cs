@@ -872,7 +872,7 @@ namespace SidebarDiagnostics.Windows
                 Right = _active.WorkArea.Left + 10
             };
 
-            windowWA = Windows.WorkArea.FromRECT(_active.WorkArea);
+            windowWA = Windows.WorkArea.FromRECT(Framework.Settings.Instance.HorizontalMode ? _active.Size : _active.WorkArea);
             windowWA.Scale(_active.InverseScaleX, _active.InverseScaleY);
 
             double _modifyX = 0d;
@@ -882,12 +882,24 @@ namespace SidebarDiagnostics.Windows
 
             double _windowWidth = Framework.Settings.Instance.SidebarWidth * _uiScale;
 
-            windowWA.SetWidth(edge, _windowWidth);
+            if (!Framework.Settings.Instance.HorizontalMode)
+            {
+                windowWA.SetWidth(edge, _windowWidth);
+            }
 
             int _offsetX = Framework.Settings.Instance.XOffset;
             int _offsetY = Framework.Settings.Instance.YOffset;
 
-            windowWA.Offset(_offsetX, _offsetY);
+            if (Framework.Settings.Instance.HorizontalMode)
+            {
+                // Horizontal offsets are independent: right from the left edge, up from the bottom.
+                windowWA.Left += Math.Max(0, Math.Min(Framework.Settings.Instance.HorizontalXOffset, windowWA.Width - 40));
+                windowWA.Bottom -= Math.Max(0, Math.Min(Framework.Settings.Instance.HorizontalYOffset, windowWA.Height - 40));
+            }
+            else
+            {
+                windowWA.Offset(_offsetX, _offsetY);
+            }
 
             appbarWA = Windows.WorkArea.FromRECT(_active.WorkArea);
 
@@ -1382,6 +1394,15 @@ namespace SidebarDiagnostics.Windows
         private async Task BindAppBar()
         {
             Monitor.GetWorkArea(this, out int screen, out DockEdge edge, out WorkArea initPos, out WorkArea windowWA, out WorkArea appbarWA);
+
+            // Horizontal HUDs float within the selected monitor rather than reserving a vertical strip.
+            if (Framework.Settings.Instance.HorizontalMode)
+            {
+                Screen = screen;
+                DockEdge = edge;
+                Move(windowWA);
+                return;
+            }
 
             Move(initPos);
 

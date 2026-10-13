@@ -86,6 +86,26 @@ namespace SidebarDiagnostics.Converters
         }
     }
 
+    public class MetricWidthConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Length < 6 || !(values[0] is string) || !(values[1] is System.Windows.Media.FontFamily)
+                || !(values[2] is double) || !(values[3] is FontStyle)
+                || !(values[4] is FontWeight) || !(values[5] is FontStretch)) return double.NaN;
+            var face = new System.Windows.Media.Typeface((System.Windows.Media.FontFamily)values[1],
+                (FontStyle)values[3], (FontWeight)values[4], (FontStretch)values[5]);
+            var text = new System.Windows.Media.FormattedText((string)values[0], culture,
+                FlowDirection.LeftToRight, face, (double)values[2], System.Windows.Media.Brushes.Black);
+            return Math.Ceiling(text.WidthIncludingTrailingWhitespace) + 2;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
     public class MetricLabelConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

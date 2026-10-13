@@ -46,6 +46,9 @@ namespace SidebarDiagnostics.Models
             PollingInterval = Framework.Settings.Instance.PollingInterval;
             UseAppBar = Framework.Settings.Instance.UseAppBar;
             AlwaysTop = Framework.Settings.Instance.AlwaysTop;
+            _horizontalXOffset = Framework.Settings.Instance.HorizontalXOffset;
+            _horizontalYOffset = Framework.Settings.Instance.HorizontalYOffset;
+            HorizontalMode = Framework.Settings.Instance.HorizontalMode;
             ToolbarMode = Framework.Settings.Instance.ToolbarMode;
             ClickThrough = Framework.Settings.Instance.ClickThrough;
             ShowTrayIcon = Framework.Settings.Instance.ShowTrayIcon;
@@ -75,6 +78,7 @@ namespace SidebarDiagnostics.Models
 
             FontSetting = Framework.Settings.Instance.FontSetting;
             FontColor = Framework.Settings.Instance.FontColor;
+            HeadingColor = Framework.Settings.Instance.EffectiveHeadingColor;
             AlertFontColor = Framework.Settings.Instance.AlertFontColor;
             AlertBlink = Framework.Settings.Instance.AlertBlink;
 
@@ -137,11 +141,14 @@ namespace SidebarDiagnostics.Models
             Framework.Settings.Instance.ScreenIndex = ScreenIndex;
             Framework.Settings.Instance.Culture = Culture;
             Framework.Settings.Instance.UIScale = UIScale;
-            Framework.Settings.Instance.XOffset = XOffset;
-            Framework.Settings.Instance.YOffset = YOffset;
+            Framework.Settings.Instance.XOffset = _xOffset;
+            Framework.Settings.Instance.HorizontalXOffset = _horizontalXOffset;
+            Framework.Settings.Instance.YOffset = _yOffset;
+            Framework.Settings.Instance.HorizontalYOffset = _horizontalYOffset;
             Framework.Settings.Instance.PollingInterval = PollingInterval;
             Framework.Settings.Instance.UseAppBar = UseAppBar;
             Framework.Settings.Instance.AlwaysTop = AlwaysTop;
+            Framework.Settings.Instance.HorizontalMode = HorizontalMode;
             Framework.Settings.Instance.ToolbarMode = ToolbarMode;
             Framework.Settings.Instance.ClickThrough = ClickThrough;
             Framework.Settings.Instance.ShowTrayIcon = ShowTrayIcon;
@@ -154,6 +161,7 @@ namespace SidebarDiagnostics.Models
             Framework.Settings.Instance.TextAlign = TextAlign;
             Framework.Settings.Instance.FontSetting = FontSetting;
             Framework.Settings.Instance.FontColor = FontColor;
+            Framework.Settings.Instance.HeadingColor = HeadingColor;
             Framework.Settings.Instance.AlertFontColor = AlertFontColor;
             Framework.Settings.Instance.AlertBlink = AlertBlink;
             Framework.Settings.Instance.DateSetting = DateSetting;
@@ -406,11 +414,12 @@ namespace SidebarDiagnostics.Models
         {
             get
             {
-                return _xOffset;
+                return HorizontalMode ? _horizontalXOffset : _xOffset;
             }
             set
             {
-                _xOffset = value;
+                if (HorizontalMode) _horizontalXOffset = value;
+                else _xOffset = value;
 
                 NotifyPropertyChanged("XOffset");
             }
@@ -422,11 +431,12 @@ namespace SidebarDiagnostics.Models
         {
             get
             {
-                return _yOffset;
+                return HorizontalMode ? _horizontalYOffset : _yOffset;
             }
             set
             {
-                _yOffset = value;
+                if (HorizontalMode) _horizontalYOffset = value;
+                else _yOffset = value;
 
                 NotifyPropertyChanged("YOffset");
             }
@@ -477,6 +487,22 @@ namespace SidebarDiagnostics.Models
                 _alwaysTop = value;
 
                 NotifyPropertyChanged("AlwaysTop");
+            }
+        }
+
+        private int _horizontalXOffset;
+        private int _horizontalYOffset;
+        private bool _horizontalMode;
+
+        public bool HorizontalMode
+        {
+            get { return _horizontalMode; }
+            set
+            {
+                _horizontalMode = value;
+                NotifyPropertyChanged("HorizontalMode");
+                NotifyPropertyChanged("XOffset");
+                NotifyPropertyChanged("YOffset");
             }
         }
 
@@ -702,6 +728,13 @@ namespace SidebarDiagnostics.Models
 
                 NotifyPropertyChanged("FontColor");
             }
+        }
+
+        private string _headingColor;
+        public string HeadingColor
+        {
+            get { return _headingColor; }
+            set { _headingColor = value; NotifyPropertyChanged("HeadingColor"); }
         }
 
         private string _alertFontColor { get; set; }

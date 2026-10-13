@@ -38,6 +38,7 @@
             </tb:TaskbarIcon>
 
             <conv:MetricLabelConverter x:Key="MetricLabelConverter" />
+            <conv:MetricWidthConverter x:Key="MetricWidthConverter" />
             <conv:FontToSpaceConverter x:Key="FontToSpaceConverter" />
             <conv:BoolInverseConverter x:Key="BoolInverseConverter" />
             <conv:PercentConverter x:Key="PercentConverter" />
@@ -63,6 +64,12 @@
                 <Setter Property="ShowMaximize" Value="False" />
                 <Setter Property="ShowClose" Value="False" />
                 <Setter Property="WindowStyle" Value="None" />
+                <Setter Property="Background" Value="Transparent" />
+            </Style>
+
+            <!-- Paint only the HUD content, including its natural width in horizontal mode. -->
+            <Style x:Key="SidebarBackground" TargetType="{x:Type Grid}">
+                <Setter Property="VerticalAlignment" Value="Top" />
                 <Setter Property="Background">
                     <Setter.Value>
                         <SolidColorBrush Opacity="{Binding Source={x:Static frame:Settings.Instance}, Path=BGOpacity, Mode=OneWay}" Color="{Binding Source={x:Static frame:Settings.Instance}, Path=BGColor, Mode=OneWay}" />
@@ -75,6 +82,9 @@
                                 <SolidColorBrush Opacity="{Binding Source={x:Static frame:Settings.Instance}, Path=BGOpacity, Mode=OneWay}" Color="{Binding Path=(SystemParameters.WindowGlassColor), Mode=OneWay}" />
                             </Setter.Value>
                         </Setter>
+                    </DataTrigger>
+                <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True"><Setter Property="HorizontalAlignment" Value="Left" />
+                        <Setter Property="VerticalAlignment" Value="Bottom" />
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
@@ -96,6 +106,14 @@
                 <Setter Property="Orientation" Value="Horizontal" />
                 <Setter Property="Visibility" Value="Hidden" />
                 <Setter Property="DockPanel.Dock" Value="Top" />
+
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="DockPanel.Dock" Value="Right" />
+                        <Setter Property="Margin" Value="2,0" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
 
             <Style x:Key="IconButton" TargetType="{x:Type Button}">
@@ -138,8 +156,16 @@
                 <Setter Property="Height" Value="{Binding Source={x:Static frame:Settings.Instance}, Path=FontSetting.IconSize, Mode=OneWay}" />
                 <Setter Property="Margin" Value="0,0,10,0" />
                 <Setter Property="Stretch" Value="Uniform" />
-                <Setter Property="Fill" Value="{Binding Source={x:Static frame:Settings.Instance}, Path=FontColor, Mode=OneWay}" />
+                <Setter Property="Fill" Value="{Binding Source={x:Static frame:Settings.Instance}, Path=EffectiveHeadingColor, Mode=OneWay}" />
                 <Setter Property="VerticalAlignment" Value="Center" />
+
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="Width" Value="14" />
+                        <Setter Property="Height" Value="14" />
+                        <Setter Property="Margin" Value="0,0,4,0" />
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
 
             <Style x:Key="AppTitle" TargetType="{x:Type Label}">
@@ -148,6 +174,21 @@
                 <Setter Property="VerticalAlignment" Value="Center" />
                 <Setter Property="Foreground" Value="{Binding Source={x:Static frame:Settings.Instance}, Path=FontColor, Mode=OneWay}" />
                 <Setter Property="FontSize" Value="{Binding Source={x:Static frame:Settings.Instance}, Path=FontSetting.TitleFontSize, Mode=OneWay}" />
+
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="FontSize" Value="11" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="HeadingTitle" TargetType="{x:Type Label}" BasedOn="{StaticResource AppTitle}">
+                <Setter Property="Foreground" Value="{Binding Source={x:Static frame:Settings.Instance}, Path=EffectiveHeadingColor}" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding HasAlert}" Value="True">
+                        <Setter Property="Foreground" Value="{Binding Source={x:Static frame:Settings.Instance}, Path=AlertFontColor}" />
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
 
             <Style x:Key="AppText" TargetType="{x:Type TextBlock}">
@@ -163,10 +204,54 @@
                 <Setter Property="Margin" Value="15,0" />
                 <Setter Property="Orientation" Value="Vertical" />
                 <Setter Property="VerticalAlignment" Value="Top" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="Orientation" Value="Horizontal" />
+                        <Setter Property="Margin" Value="0" />
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
 
             <Style x:Key="VerticalPanel" TargetType="{x:Type StackPanel}">
                 <Setter Property="Orientation" Value="Vertical" />
+            </Style>
+
+            <Style x:Key="OrientationPanel" TargetType="{x:Type StackPanel}" BasedOn="{StaticResource VerticalPanel}">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="Orientation" Value="Horizontal" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- Metrics use two rows in horizontal mode; vertical mode remains one column. -->
+            <Style x:Key="MetricRows" TargetType="{x:Type UniformGrid}">
+                <Setter Property="Columns" Value="1" />
+                <Setter Property="Rows" Value="0" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="Columns" Value="0" />
+                        <Setter Property="Rows" Value="2" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="VerticalOnlyTitle" TargetType="{x:Type StackPanel}">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="HorizontalColumnTitle" TargetType="{x:Type StackPanel}">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
 
             <Style x:Key="HeaderPanel" TargetType="{x:Type StackPanel}">
@@ -177,11 +262,24 @@
             <Style x:Key="GroupPanel" TargetType="{x:Type StackPanel}">
                 <Setter Property="Orientation" Value="Vertical" />
                 <Setter Property="Margin" Value="0,10" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="VerticalAlignment" Value="Top" />
+                        <Setter Property="Margin" Value="0,0,5,0" />
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
 
             <Style x:Key="MonitorPanel" TargetType="{x:Type StackPanel}">
                 <Setter Property="Orientation" Value="Vertical" />
                 <Setter Property="Margin" Value="0,10,0,0" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="Margin" Value="0,0,3,0" />
+                        <Setter Property="MinWidth" Value="0" />
+                        <Setter Property="Orientation" Value="Horizontal" />
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
 
             <Style x:Key="MonitorTitle" TargetType="{x:Type StackPanel}">
@@ -199,6 +297,19 @@
                 <Setter Property="Margin" Value="0" />
                 <Setter Property="FontSize" Value="{Binding Source={x:Static frame:Settings.Instance}, Path=FontSetting.FontSize, Mode=OneWay}" />
                 <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="FontSize" Value="11" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="DriveRowName" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource DataText}">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
 
             <Style x:Key="HardwareText" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource DataText}">
@@ -207,14 +318,23 @@
 
             <Style x:Key="MetricPanel" TargetType="{x:Type DockPanel}">
                 <Setter Property="LastChildFill" Value="False" />
+
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="Margin" Value="0,0,2,0" />
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
-            
+
             <Style x:Key="MetricLabel" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource DataText}">
                 <Setter Property="DockPanel.Dock" Value="Left" />
                 <Setter Property="Margin" Value="{Binding Source={x:Static frame:Settings.Instance}, Path=FontSetting.FontSize, Mode=OneWay, Converter={StaticResource FontToSpaceConverter}}" />
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding Path=IsAlert, Mode=OneWay}" Value="True">
                         <Setter Property="Foreground" Value="{Binding Path=AlertColor, Mode=OneWay}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="Margin" Value="0,0,2,0" />
                     </DataTrigger>
                 </Style.Triggers>
             </Style>
@@ -226,9 +346,26 @@
                         <Setter Property="DockPanel.Dock" Value="Right" />
                         <Setter Property="TextAlignment" Value="Right" />
                     </DataTrigger>
+                    <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True">
+                        <Setter Property="Width">
+                            <Setter.Value>
+                                <MultiBinding Converter="{StaticResource MetricWidthConverter}">
+                                    <Binding Path="WidthSample" />
+                                    <Binding Path="FontFamily" RelativeSource="{RelativeSource Self}" />
+                                    <Binding Path="FontSize" RelativeSource="{RelativeSource Self}" />
+                                    <Binding Path="FontStyle" RelativeSource="{RelativeSource Self}" />
+                                    <Binding Path="FontWeight" RelativeSource="{RelativeSource Self}" />
+                                    <Binding Path="FontStretch" RelativeSource="{RelativeSource Self}" />
+                                </MultiBinding>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="TextWrapping" Value="NoWrap" />
+                        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                        <Setter Property="ToolTip" Value="{Binding Text}" />
+                    </DataTrigger>
                 </Style.Triggers>
             </Style>
-            
+
             <Style x:Key="DriveProgress" TargetType="{x:Type ProgressBar}">
                 <Setter Property="Minimum" Value="0" />
                 <Setter Property="Maximum" Value="100" />
@@ -657,6 +794,10 @@
                     <Trigger Property="IsMouseOver" Value="True">
                         <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
                     </Trigger>
+                <DataTrigger Binding="{Binding Source={x:Static frame:Settings.Instance}, Path=HorizontalMode}" Value="True"><Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+                        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+                        <Setter Property="Margin" Value="4,2" />
+                    </DataTrigger>
                 </Style.Triggers>
                 <Style.Resources>
                     <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource MinScrollBar}" />

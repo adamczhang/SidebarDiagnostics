@@ -1,6 +1,10 @@
-<h1><img src="https://cdn.rawgit.com/ArcadeRenegade/SidebarDiagnostics/master/sidebar.ico" width="64" height="64" /> Sidebar Diagnostics</h1>
+﻿<h1><img src="https://cdn.rawgit.com/ArcadeRenegade/SidebarDiagnostics/master/sidebar.ico" width="64" height="64" /> Sidebar Diagnostics</h1>
 
 A simple sidebar for Windows desktop that displays hardware diagnostic information.
+
+### Dynamic HUD custom fork
+
+This fork includes **Sidebar Diagnostics Dynamic HUD 3.6.3.14**, built as `SidebarDiagnostics.DynamicHud.exe`. It adds a content-sized background, compact horizontal taskbar layout, separate heading colors, a screen-color eyedropper, and activity alerts. See [CUSTOM-HUD.md](CUSTOM-HUD.md) for setup, building, tests, and known limitations. The upstream download below does not include these custom changes.
 
 ### Download
 

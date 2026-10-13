@@ -1,5 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Windows.Interop;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -111,16 +114,27 @@ namespace SidebarDiagnostics
         {
             await BindPosition();
 
-            if (Framework.Settings.Instance.AlwaysTop)
+            if (_fullscreenTimer != null) _fullscreenTimer.Stop();
+            if (Framework.Settings.Instance.HorizontalMode)
+            {
+                // The floating taskbar HUD does not receive AppBar fullscreen notifications.
+                ShowDesktop.RemoveHook();
+                UpdateHorizontalZOrder();
+                if (_fullscreenTimer == null)
+                {
+                    _fullscreenTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+                    _fullscreenTimer.Tick += (sender, args) => UpdateHorizontalZOrder();
+                }
+                _fullscreenTimer.Start();
+            }
+            else if (Framework.Settings.Instance.AlwaysTop)
             {
                 SetTopMost(false);
-
                 ShowDesktop.RemoveHook();
             }
             else
             {
                 ClearTopMost(false);
-
                 ShowDesktop.AddHook(this);
             }
 
@@ -144,7 +158,7 @@ namespace SidebarDiagnostics
 
             if (WindowControls.Visibility != Visibility.Visible)
             {
-                if (Framework.Settings.Instance.CollapseMenuBar)
+                if (Framework.Settings.Instance.CollapseMenuBar || Framework.Settings.Instance.HorizontalMode)
                 {
                     WindowControls.Visibility = Visibility.Collapsed;
                 }
@@ -159,6 +173,49 @@ namespace SidebarDiagnostics
             if (enableHotkeys)
             {
                 Hotkey.Enable();
+            }
+        }
+
+        private DispatcherTimer _fullscreenTimer;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr hwnd, out RECT rect);
+
+        internal static bool CoversScreen(RECT window, RECT screen, string windowClass)
+        {
+            // The desktop and taskbar are not fullscreen applications.
+            if (windowClass == "WorkerW" || windowClass == "Progman" ||
+                windowClass == "Shell_TrayWnd" || windowClass == "Shell_SecondaryTrayWnd") return false;
+            return window.Left <= screen.Left && window.Top <= screen.Top &&
+                window.Right >= screen.Right && window.Bottom >= screen.Bottom;
+        }
+
+        private void UpdateHorizontalZOrder()
+        {
+            if (!Framework.Settings.Instance.HorizontalMode) return;
+            bool fullscreen = false;
+            if (!Framework.Settings.Instance.AlwaysTop)
+            {
+                IntPtr foreground = GetForegroundWindow();
+                RECT bounds;
+                if (foreground != IntPtr.Zero && foreground != new WindowInteropHelper(this).Handle &&
+                    GetWindowRect(foreground, out bounds))
+                {
+                    var name = new StringBuilder(256);
+                    NativeMethods.GetClassName(foreground, name, name.Capacity);
+                    var screen = Monitor.GetMonitorFromIndex(Framework.Settings.Instance.ScreenIndex);
+                    fullscreen = CoversScreen(bounds, screen.Size, name.ToString());
+                }
+            }
+            if (fullscreen)
+            {
+                if (IsTopMost) SetBottom(false);
+            }
+            else
+            {
+                SetTopMost(false);
             }
         }
 
@@ -237,7 +294,7 @@ namespace SidebarDiagnostics
 
         private void Window_MouseLeave(object sender, MouseEventArgs e)
         {
-            WindowControls.Visibility = Framework.Settings.Instance.CollapseMenuBar ? Visibility.Collapsed : Visibility.Hidden;
+            WindowControls.Visibility = (Framework.Settings.Instance.CollapseMenuBar || Framework.Settings.Instance.HorizontalMode) ? Visibility.Collapsed : Visibility.Hidden;
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -255,6 +312,7 @@ namespace SidebarDiagnostics
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
+            if (_fullscreenTimer != null) _fullscreenTimer.Stop();
             Ready = false;
 
             DataContext = null;

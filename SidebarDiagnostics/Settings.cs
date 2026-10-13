@@ -278,6 +278,25 @@ namespace SidebarDiagnostics.Framework
             }
         }
 
+        [JsonProperty]
+        public int HorizontalXOffset { get; set; }
+
+        [JsonProperty]
+        public int HorizontalYOffset { get; set; }
+
+        private bool _horizontalMode;
+
+        [JsonProperty]
+        public bool HorizontalMode
+        {
+            get { return _horizontalMode; }
+            set
+            {
+                _horizontalMode = value;
+                NotifyPropertyChanged("HorizontalMode");
+            }
+        }
+
         private bool _toolbarMode { get; set; } = true;
 
         [JsonProperty]
@@ -479,8 +498,26 @@ namespace SidebarDiagnostics.Framework
                 _fontColor = value;
 
                 NotifyPropertyChanged("FontColor");
+                NotifyPropertyChanged("EffectiveHeadingColor");
             }
         }
+
+        private string _headingColor;
+
+        [JsonProperty]
+        public string HeadingColor
+        {
+            get { return _headingColor; }
+            set
+            {
+                _headingColor = value;
+                NotifyPropertyChanged("HeadingColor");
+                NotifyPropertyChanged("EffectiveHeadingColor");
+            }
+        }
+
+        [JsonIgnore]
+        public string EffectiveHeadingColor { get { return HeadingColor ?? FontColor; } }
 
         private string _alertFontColor { get; set; } = "#FF4136";
 

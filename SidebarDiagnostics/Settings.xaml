@@ -59,6 +59,7 @@
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <Label Grid.Column="0" Grid.Row="0" Content="{x:Static frame:Resources.SettingsDock}" />
@@ -81,6 +82,8 @@
 
                     <Label Grid.Column="0" Grid.Row="6" Content="{x:Static frame:Resources.SettingsRunAtStartup}" />
                     <CheckBox Grid.Column="1" Grid.Row="6" IsChecked="{Binding Path=RunAtStartup, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsRunAtStartupTooltip}" />
+                    <Label Grid.Column="0" Grid.Row="7" Content="Horizontal mode" />
+                    <CheckBox Grid.Column="1" Grid.Row="7" IsChecked="{Binding HorizontalMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Arrange hardware sections side by side. Compact HUD at the selected screen's bottom-left corner, over the taskbar. Horizontal offset moves right; vertical offset moves up. No desktop space is reserved." />
                 </Grid>
             </TabItem>
             <TabItem Header="{x:Static frame:Resources.SettingsAdvancedTab}">
@@ -161,6 +164,7 @@
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="38px"></RowDefinition>
+                        <RowDefinition Height="38px" />
                     </Grid.RowDefinitions>
 
                     <Label Grid.Column="0" Grid.Row="0" Content="{x:Static frame:Resources.SettingsSidebarWidth}" />
@@ -173,7 +177,10 @@
                     <CheckBox Grid.Column="1" Grid.Row="1" IsChecked="{Binding Path=AutoBGColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsAutoBackgroundTooltip}" />
 
                     <Label Grid.Column="0" Grid.Row="2" Content="{x:Static frame:Resources.SettingsBackgroundColor}" />
-                    <xctk:ColorPicker Grid.Column="1" Grid.Row="2" IsEnabled="{Binding Path=AutoBGColor, Mode=OneWay, Converter={StaticResource BoolInverseConverter}}" SelectedColor="{Binding Path=BGColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsBackgroundColorTooltip}" />
+                    <DockPanel Grid.Column="1" Grid.Row="2" IsEnabled="{Binding AutoBGColor, Converter={StaticResource BoolInverseConverter}}">
+                        <Button DockPanel.Dock="Right" Content="Pick…" Tag="BGColor" Click="PickScreenColor_Click" Margin="6,0,0,0" Padding="6,2" ToolTip="Pick a color anywhere on screen. Click to select; Esc or right-click to cancel. Then Apply or Save." />
+                        <xctk:ColorPicker IsEnabled="{Binding Path=AutoBGColor, Mode=OneWay, Converter={StaticResource BoolInverseConverter}}" SelectedColor="{Binding Path=BGColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsBackgroundColorTooltip}" />
+                    </DockPanel>
 
                     <Label Grid.Column="0" Grid.Row="3" Content="{x:Static frame:Resources.SettingsBackgroundOpacity}" />
                     <DockPanel Grid.Column="1" Grid.Row="3">
@@ -188,25 +195,37 @@
                     <ComboBox Grid.Column="1" Grid.Row="5" ItemsSource="{Binding Path=FontSettingItems, Mode=OneWay}" DisplayMemberPath="FontSize" SelectedValue="{Binding Path=FontSetting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsFontSizeTooltip}" />
 
                     <Label Grid.Column="0" Grid.Row="6" Content="{x:Static frame:Resources.SettingsFontColor}" />
-                    <xctk:ColorPicker Grid.Column="1" Grid.Row="6" SelectedColor="{Binding Path=FontColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsFontColorTooltip}"/>
+                    <DockPanel Grid.Column="1" Grid.Row="6">
+                        <Button DockPanel.Dock="Right" Content="Pick…" Tag="FontColor" Click="PickScreenColor_Click" Margin="6,0,0,0" Padding="6,2" ToolTip="Pick a color anywhere on screen. Click to select; Esc or right-click to cancel. Then Apply or Save." />
+                        <xctk:ColorPicker SelectedColor="{Binding Path=FontColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsFontColorTooltip}"/>
+                    </DockPanel>
 
-                    <Label Grid.Column="0" Grid.Row="7" Content="{x:Static frame:Resources.SettingsAlertFontColor}" />
-                    <xctk:ColorPicker Grid.Column="1" Grid.Row="7" SelectedColor="{Binding Path=AlertFontColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsAlertFontColorTooltip}"/>
+                    <Label Grid.Column="0" Grid.Row="7" Content="Heading color" />
+                    <DockPanel Grid.Column="1" Grid.Row="7">
+                        <Button DockPanel.Dock="Right" Content="Pick…" Tag="HeadingColor" Click="PickScreenColor_Click" Margin="6,0,0,0" Padding="6,2" ToolTip="Pick a color anywhere on screen. Click to select; Esc or right-click to cancel. Then Apply or Save." />
+                        <xctk:ColorPicker SelectedColor="{Binding HeadingColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Color of the top hardware headings and their icons. Readings use Font Color." />
+                    </DockPanel>
 
-                    <Label Grid.Column="0" Grid.Row="8" Content="{x:Static frame:Resources.SettingsAlertBlink}" />
-                    <CheckBox Grid.Column="1" Grid.Row="8" IsChecked="{Binding Path=AlertBlink, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsAlertBlinkTooltip}" />
+                    <Label Grid.Column="0" Grid.Row="8" Content="{x:Static frame:Resources.SettingsAlertFontColor}" />
+                    <DockPanel Grid.Column="1" Grid.Row="8">
+                        <Button DockPanel.Dock="Right" Content="Pick…" Tag="AlertFontColor" Click="PickScreenColor_Click" Margin="6,0,0,0" Padding="6,2" ToolTip="Pick a color anywhere on screen. Click to select; Esc or right-click to cancel. Then Apply or Save." />
+                        <xctk:ColorPicker SelectedColor="{Binding Path=AlertFontColor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsAlertFontColorTooltip}"/>
+                    </DockPanel>
 
-                    <Label Grid.Column="0" Grid.Row="9" Content="{x:Static frame:Resources.SettingsShowMachineName}" />
-                    <CheckBox Grid.Column="1" Grid.Row="9" IsChecked="{Binding Path=ShowMachineName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsShowMachineNameTooltip}" />
+                    <Label Grid.Column="0" Grid.Row="9" Content="{x:Static frame:Resources.SettingsAlertBlink}" />
+                    <CheckBox Grid.Column="1" Grid.Row="9" IsChecked="{Binding Path=AlertBlink, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsAlertBlinkTooltip}" />
 
-                    <Label Grid.Column="0" Grid.Row="10" Content="{x:Static frame:Resources.SettingsShowClock}" />
-                    <CheckBox Grid.Column="1" Grid.Row="10" IsChecked="{Binding Path=ShowClock, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsShowClockTooltip}" />
+                    <Label Grid.Column="0" Grid.Row="10" Content="{x:Static frame:Resources.SettingsShowMachineName}" />
+                    <CheckBox Grid.Column="1" Grid.Row="10" IsChecked="{Binding Path=ShowMachineName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsShowMachineNameTooltip}" />
 
-                    <Label Grid.Column="0" Grid.Row="11" Content="{x:Static frame:Resources.Settings24HourClock}" />
-                    <CheckBox Grid.Column="1" Grid.Row="11" IsChecked="{Binding Path=Clock24HR, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding Path=ShowClock, Mode=OneWay}" ToolTip="{x:Static frame:Resources.Settings24HourClockTooltip}" />
+                    <Label Grid.Column="0" Grid.Row="11" Content="{x:Static frame:Resources.SettingsShowClock}" />
+                    <CheckBox Grid.Column="1" Grid.Row="11" IsChecked="{Binding Path=ShowClock, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="{x:Static frame:Resources.SettingsShowClockTooltip}" />
 
-                    <Label Grid.Column="0" Grid.Row="12" Content="{x:Static frame:Resources.SettingsDateFormat}" />
-                    <ComboBox Grid.Column="1" Grid.Row="12" ItemsSource="{Binding Path=DateSettingItems}" DisplayMemberPath="Display" SelectedValue="{Binding Path=DateSetting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding Path=ShowClock, Mode=OneWay}" ToolTip="{x:Static frame:Resources.SettingsDateFormatTooltip}" />
+                    <Label Grid.Column="0" Grid.Row="12" Content="{x:Static frame:Resources.Settings24HourClock}" />
+                    <CheckBox Grid.Column="1" Grid.Row="12" IsChecked="{Binding Path=Clock24HR, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding Path=ShowClock, Mode=OneWay}" ToolTip="{x:Static frame:Resources.Settings24HourClockTooltip}" />
+
+                    <Label Grid.Column="0" Grid.Row="13" Content="{x:Static frame:Resources.SettingsDateFormat}" />
+                    <ComboBox Grid.Column="1" Grid.Row="13" ItemsSource="{Binding Path=DateSettingItems}" DisplayMemberPath="Display" SelectedValue="{Binding Path=DateSetting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding Path=ShowClock, Mode=OneWay}" ToolTip="{x:Static frame:Resources.SettingsDateFormatTooltip}" />
                 </Grid>
             </TabItem>
             <TabItem Header="{x:Static frame:Resources.SettingsMonitorsTab}">

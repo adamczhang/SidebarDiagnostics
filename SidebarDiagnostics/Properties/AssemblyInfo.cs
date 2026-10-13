@@ -7,11 +7,11 @@ using System.Windows;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Sidebar Diagnostics")]
-[assembly: AssemblyDescription("Sidebar Diagnostics")]
+[assembly: AssemblyTitle("Sidebar Diagnostics Dynamic HUD")]
+[assembly: AssemblyDescription("Sidebar Diagnostics with content-sized HUD background")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Sidebar Diagnostics")]
-[assembly: AssemblyProduct("Sidebar Diagnostics")]
+[assembly: AssemblyProduct("Sidebar Diagnostics Dynamic HUD")]
 [assembly: AssemblyCopyright("Copyright © 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -51,5 +51,6 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("3.6.3.0")]
-[assembly: AssemblyFileVersion("3.6.3.0")]
+[assembly: AssemblyVersion("3.6.3.14")]
+[assembly: AssemblyFileVersion("3.6.3.14")]
+[assembly: AssemblyInformationalVersion("3.6.3.14-dynamic-hud")]

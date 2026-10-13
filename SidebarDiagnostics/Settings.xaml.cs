@@ -28,6 +28,36 @@ namespace SidebarDiagnostics
             ShowDialog();
         }
 
+        private async void PickScreenColor_Click(object sender, RoutedEventArgs e)
+        {
+            string target = (string)((System.Windows.Controls.Button)sender).Tag;
+            double previousOpacity = Opacity;
+            try
+            {
+                Opacity = 0;
+                // Let the desktop redraw before taking the frozen sampling image.
+                await Task.Delay(200);
+                string color = ScreenColorPicker.Pick();
+                if (color == null) return;
+                switch (target)
+                {
+                    case "FontColor": Model.FontColor = color; break;
+                    case "HeadingColor": Model.HeadingColor = color; break;
+                    case "BGColor": Model.BGColor = color; break;
+                    case "AlertFontColor": Model.AlertFontColor = color; break;
+                }
+            }
+            catch (Exception error)
+            {
+                MessageBox.Show("Could not sample the screen color: " + error.Message, "Screen color picker", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                Opacity = previousOpacity;
+                Activate();
+            }
+        }
+
         private async Task Save(bool finalize)
         {
             Model.Save();

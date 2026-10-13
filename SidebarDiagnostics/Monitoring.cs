@@ -236,6 +236,15 @@ namespace SidebarDiagnostics.Monitoring
             Title = title;
 
             Monitors = monitors;
+            for (int i = 0; i < monitors.Length; i++)
+            {
+                var monitor = monitors[i] as BaseMonitor;
+                if (monitor == null) continue;
+                monitor.HorizontalHeading = monitor.GpuHeading ?? (monitor is DriveMonitor
+                    ? (i == 0 ? title + " " : "") + monitor.ID
+                    : (i == 0 ? title : monitor.Name));
+                monitor.HorizontalIcon = i == 0 ? IconPath : null;
+            }
         }
 
         public void Dispose()
@@ -344,6 +353,19 @@ namespace SidebarDiagnostics.Monitoring
 
     public class BaseMonitor : iMonitor
     {
+        public string HorizontalHeading { get; set; }
+        public Geometry HorizontalIcon { get; set; }
+        public string GpuHeading { get; protected set; }
+
+        public static string ClassifyGpu(string name)
+        {
+            // Recognize known product families; leave unfamiliar adapters labeled GPU.
+            if (string.Equals(name, "AMD Radeon(TM) Graphics", StringComparison.OrdinalIgnoreCase)
+                || Regex.IsMatch(name ?? "", @"Radeon.*\b(680M|780M|860M|880M|890M)\b|Intel.*(UHD|Iris|HD Graphics)", RegexOptions.IgnoreCase)) return "iGPU";
+            if (Regex.IsMatch(name ?? "", @"GeForce|Quadro|Radeon.*\bRX\b", RegexOptions.IgnoreCase)) return "dGPU";
+            return "GPU";
+        }
+
         public BaseMonitor(string id, string name, bool showName)
         {
             ID = id;
@@ -365,6 +387,7 @@ namespace SidebarDiagnostics.Monitoring
                 {
                     foreach (iMetric _metric in Metrics)
                     {
+                        _metric.PropertyChanged -= MetricAlertChanged;
                         _metric.Dispose();
                     }
 
@@ -456,10 +479,22 @@ namespace SidebarDiagnostics.Monitoring
             }
             protected set
             {
+                if (_metrics != null)
+                    foreach (var metric in _metrics) metric.PropertyChanged -= MetricAlertChanged;
                 _metrics = value;
+                if (_metrics != null)
+                    foreach (var metric in _metrics) metric.PropertyChanged += MetricAlertChanged;
+                NotifyPropertyChanged("HasAlert");
 
                 NotifyPropertyChanged("Metrics");
             }
+        }
+
+        public bool HasAlert { get { return Metrics != null && Metrics.Any(metric => metric.IsAlert); } }
+
+        private void MetricAlertChanged(object sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName == "IsAlert") NotifyPropertyChanged("HasAlert");
         }
 
         private bool _disposed { get; set; } = false;
@@ -470,6 +505,7 @@ namespace SidebarDiagnostics.Monitoring
         public OHMMonitor(MonitorType type, string id, string name, IHardware hardware, IHardware board, MetricConfig[] metrics, ConfigParam[] parameters) : base(id, name, parameters.GetValue<bool>(ParamKey.HardwareNames))
         {
             _hardware = hardware;
+            if (type == MonitorType.GPU) GpuHeading = ClassifyGpu(hardware.Name);
 
             UpdateHardware();
 
@@ -769,6 +805,12 @@ namespace SidebarDiagnostics.Monitoring
                 }
             }
 
+            var activitySensor = _hardware.Sensors.FirstOrDefault(sensor => sensor.SensorType == SensorType.Load && sensor.Index == 0);
+            if (activitySensor != null)
+            {
+                foreach (var metric in _sensorList.Where(metric => metric.Key == MetricKey.RAMUsed || metric.Key == MetricKey.RAMFree))
+                    metric.ActivityPercent = () => activitySensor.Value.HasValue ? (double?)activitySensor.Value.Value : null;
+            }
             Metrics = _sensorList.ToArray();
         }
 
@@ -1367,6 +1409,7 @@ namespace SidebarDiagnostics.Monitoring
             _converter = converter;
             _round = round;
             _alertValue = alertValue;
+            _isPercentage = dataType == DataType.Percent;
 
             Key = key;
 
@@ -1381,6 +1424,12 @@ namespace SidebarDiagnostics.Monitoring
             }
 
             nAppend = Append = converter == null ? dataType.GetAppend() : converter.TargetType.GetAppend();
+            var displayType = converter == null ? dataType : converter.TargetType;
+            // Stable capacity, independent of the current reading or dynamically selected unit.
+            string digits = displayType == DataType.Percent || (converter != null && converter.IsDynamic) ? "888" : "8,888";
+            string suffix = converter != null && converter.IsDynamic ? " MB/s" : Append;
+            WidthSample = digits + (round ? "" : ".88") + suffix;
+            if (displayType == DataType.IP) WidthSample = "888.888.888.888";
         }
 
         public void Dispose()
@@ -1402,6 +1451,7 @@ namespace SidebarDiagnostics.Monitoring
                     }
 
                     _converter = null;
+                    ActivityPercent = null;
                 }
 
                 _disposed = true;
@@ -1412,6 +1462,27 @@ namespace SidebarDiagnostics.Monitoring
         {
             Dispose(false);
         }
+
+        private readonly bool _isPercentage;
+        private bool _activityAlert;
+        public bool IsActivityAlert { get { return _activityAlert; } }
+        public Func<double?> ActivityPercent { get; set; }
+
+        private bool HasActivityAlert(double rawValue)
+        {
+            if (_isPercentage && rawValue > 65d) return true;
+            if (ActivityPercent != null && ActivityPercent() > 65d) return true;
+            switch (Key)
+            {
+                case MetricKey.DriveRead:
+                case MetricKey.DriveWrite: return rawValue > 1000000000d;
+                case MetricKey.NetworkIn:
+                case MetricKey.NetworkOut: return rawValue > 50000000d;
+                default: return false;
+            }
+        }
+
+        public string WidthSample { get; private set; }
 
         public virtual void Update() { }
 
@@ -1442,7 +1513,14 @@ namespace SidebarDiagnostics.Monitoring
 
             Value = _val;
 
-            if (_alertValue > 0 && _alertValue <= nValue)
+            bool activity = HasActivityAlert(value);
+            if (_activityAlert != activity)
+            {
+                _activityAlert = activity;
+                NotifyPropertyChanged("IsActivityAlert");
+                NotifyPropertyChanged("AlertColor");
+            }
+            if (activity || (_alertValue > 0 && _alertValue <= nValue))
             {
                 if (!IsAlert)
                 {
@@ -1454,10 +1532,26 @@ namespace SidebarDiagnostics.Monitoring
                 IsAlert = false;
             }
 
+            double displayValue = _val;
+            string displayUnit = Append;
+            if (Framework.Settings.Instance.HorizontalMode && _converter != null && _converter.IsDynamic)
+            {
+                // Both rate converters receive raw bytes/second. Use decimal SI units in the HUD,
+                // independently of legacy graph/alert normalization and the network bits setting.
+                string[] units = { " kB/s", " MB/s", " GB/s", " TB/s" };
+                displayValue = value / 1000d;
+                int index = 0;
+                while (index < units.Length - 1 && Math.Round(Math.Abs(displayValue), _round ? 0 : 2) >= 1000)
+                {
+                    displayValue /= 1000d;
+                    index++;
+                }
+                displayUnit = units[index];
+            }
             Text = string.Format(
                 "{0:#,##0.##}{1}",
-                _val.Round(_round),
-                Append
+                displayValue.Round(_round),
+                displayUnit
                 );
         }
 
@@ -1617,7 +1711,7 @@ namespace SidebarDiagnostics.Monitoring
                 {
                     _alertColorFlag = false;
 
-                    if (Framework.Settings.Instance.AlertBlink)
+                    if (Framework.Settings.Instance.AlertBlink && !_activityAlert)
                     {
                         _alertColorTimer = new DispatcherTimer(DispatcherPriority.Normal, App.Current.Dispatcher);
                         _alertColorTimer.Interval = TimeSpan.FromSeconds(0.5d);
@@ -1642,7 +1736,8 @@ namespace SidebarDiagnostics.Monitoring
         {
             get
             {
-                return _alertColorFlag ? Framework.Settings.Instance.FontColor : Framework.Settings.Instance.AlertFontColor;
+                return _activityAlert ? Framework.Settings.Instance.AlertFontColor :
+                    (_alertColorFlag ? Framework.Settings.Instance.FontColor : Framework.Settings.Instance.AlertFontColor);
             }
         }
 
